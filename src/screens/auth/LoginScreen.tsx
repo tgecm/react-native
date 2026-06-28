@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { login, verifyLoginCode, staffVerifyLoginCode, getMe, staffLogin } from '../../services/api/auth';
+import { login, verifyLoginCode, staffVerifyLoginCode, getMe, staffLogin, pollLoginApproval } from '../../services/api/auth';
 import { getBots } from '../../services/api/bots';
 import { useAuthStore, useBotStore } from '../../store';
 import { colors, fontSize, spacing, borderRadius, shadows } from '../../utils/theme';
@@ -25,9 +25,38 @@ export const LoginScreen: React.FC = () => {
   const [step, setStep] = useState<'credentials' | 'verify' | 'loading'>('credentials');
   const [isStaff, setIsStaff] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [waitingApproval, setWaitingApproval] = useState(false);
 
   const authStore = useAuthStore();
   const botStore = useBotStore();
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Poll for Telegram approval
+  useEffect(() => {
+    if (!loginToken || step !== 'verify') return;
+
+    setWaitingApproval(false);
+    const poll = async () => {
+      try {
+        const data = await pollLoginApproval(loginToken);
+        if (data.status === 'approved') {
+          if (pollRef.current) clearInterval(pollRef.current);
+          await completeLogin(data);
+        } else if (data.status === 'pending') {
+          setWaitingApproval(true);
+        }
+      } catch {
+        // retry on next interval
+      }
+    };
+
+    poll();
+    pollRef.current = setInterval(poll, 2000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+      setWaitingApproval(false);
+    };
+  }, [loginToken, step]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -133,11 +162,25 @@ export const LoginScreen: React.FC = () => {
             <Icon name="shield-check" size={48} color={colors.primary} />
             <Text style={styles.title}>Verify Login</Text>
             <Text style={styles.subtitle}>
-              A verification code was sent to your Telegram. Enter it below.
+              Confirm this login from your Telegram.
             </Text>
           </View>
 
+          {waitingApproval && (
+            <View style={styles.approvalBanner}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.approvalText}>
+                Waiting for approval in Telegram...
+              </Text>
+              <Text style={styles.approvalHint}>
+                Open Telegram and tap "Approve" on the login notification.
+              </Text>
+            </View>
+          )}
+
           <View style={styles.form}>
+            <Text style={styles.orLabel}>Or enter the code manually</Text>
+
             <TextInput
               style={styles.input}
               placeholder="Enter verification code"
@@ -149,14 +192,16 @@ export const LoginScreen: React.FC = () => {
             />
 
             <TouchableOpacity style={styles.button} onPress={handleVerifyCode}>
-              <Text style={styles.buttonText}>Verify</Text>
+              <Text style={styles.buttonText}>Verify Code</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.linkButton}
               onPress={() => {
+                if (pollRef.current) clearInterval(pollRef.current);
                 setStep('credentials');
                 setCode('');
+                setWaitingApproval(false);
               }}
             >
               <Text style={styles.linkText}>Back to login</Text>
@@ -244,6 +289,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  approvalBanner: {
+    backgroundColor: colors.primaryLight + '20',
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    alignItems: 'center',
+  },
+  approvalText: {
+    fontSize: fontSize.md,
+    fontWeight: '600',
+    color: colors.primary,
+    marginTop: spacing.sm,
+  },
+  approvalHint: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  orLabel: {
+    fontSize: fontSize.sm,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
   scrollContent: {
     flexGrow: 1,

@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { login, verifyLoginCode, getMe, staffLogin } from '../../services/api/auth';
+import { login, verifyLoginCode, staffVerifyLoginCode, getMe, staffLogin } from '../../services/api/auth';
 import { getBots } from '../../services/api/bots';
 import { useAuthStore, useBotStore } from '../../store';
 import { colors, fontSize, spacing, borderRadius, shadows } from '../../utils/theme';
@@ -63,7 +63,9 @@ export const LoginScreen: React.FC = () => {
 
     setStep('loading');
     try {
-      const data = await verifyLoginCode(loginToken, code);
+      const data = isStaff
+        ? await staffVerifyLoginCode(loginToken, code)
+        : await verifyLoginCode(loginToken, code);
       await completeLogin(data);
     } catch (error: any) {
       setStep('verify');
@@ -81,8 +83,19 @@ export const LoginScreen: React.FC = () => {
     }
 
     try {
-      const user = await getMe();
-      authStore.login(token, user, !!isStaff);
+      if (isStaff) {
+        // Staff: user data comes from response, no /me endpoint
+        const user = data.staff || { email: '', name: '' };
+        authStore.login(token, user, true);
+        if (data.staff?.bot_id) {
+          botStore.setSelectedBot(data.staff.bot_id);
+        }
+      } else {
+        // Regular user: set token first, then fetch full profile
+        authStore.login(token, {} as any, false);
+        const user = await getMe();
+        authStore.login(token, user, false);
+      }
 
       // Load bots
       try {

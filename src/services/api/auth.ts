@@ -6,6 +6,9 @@ export const login = (email: string, password: string) =>
 export const verifyLoginCode = (loginToken: string, code: string) =>
   client.post('/auth/login/verify', { login_token: loginToken, code }).then(res => res.data);
 
+export const staffVerifyLoginCode = (loginToken: string, code: string) =>
+  client.post('/auth/staff-login/verify', { login_token: loginToken, code }).then(res => res.data);
+
 export const getMe = () =>
   client.get('/me').then(res => res.data);
 

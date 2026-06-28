@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -31,6 +31,42 @@ export const LoginScreen: React.FC = () => {
   const botStore = useBotStore();
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const completeLogin = useCallback(async (data: any) => {
+    const token = data.token || data.access_token;
+    if (!token) {
+      setStep('credentials');
+      Alert.alert('Error', 'No token received');
+      return;
+    }
+
+    try {
+      if (isStaff) {
+        const user = data.staff || { email: '', name: '' };
+        authStore.login(token, user, true);
+        if (data.staff?.bot_id) {
+          botStore.setSelectedBot(data.staff.bot_id);
+        }
+      } else {
+        authStore.login(token, {} as any, false);
+        const user = await getMe();
+        authStore.login(token, user, false);
+      }
+
+      try {
+        const bots = await getBots();
+        botStore.setBots(bots);
+        if (bots.length > 0 && !botStore.selectedBotId) {
+          botStore.setSelectedBot(bots[0].id);
+        }
+      } catch {
+        // Bots loading is non-critical
+      }
+    } catch {
+      setStep('credentials');
+      Alert.alert('Error', 'Failed to load user data');
+    }
+  }, [isStaff, authStore, botStore]);
+
   // Poll for Telegram approval
   useEffect(() => {
     if (!loginToken || step !== 'verify') return;
@@ -56,7 +92,7 @@ export const LoginScreen: React.FC = () => {
       if (pollRef.current) clearInterval(pollRef.current);
       setWaitingApproval(false);
     };
-  }, [loginToken, step]);
+  }, [loginToken, step, completeLogin]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -102,46 +138,6 @@ export const LoginScreen: React.FC = () => {
       Alert.alert('Verification Failed', message);
     }
   };
-
-  const completeLogin = async (data: any) => {
-    const token = data.token || data.access_token;
-    if (!token) {
-      setStep('credentials');
-      Alert.alert('Error', 'No token received');
-      return;
-    }
-
-    try {
-      if (isStaff) {
-        // Staff: user data comes from response, no /me endpoint
-        const user = data.staff || { email: '', name: '' };
-        authStore.login(token, user, true);
-        if (data.staff?.bot_id) {
-          botStore.setSelectedBot(data.staff.bot_id);
-        }
-      } else {
-        // Regular user: set token first, then fetch full profile
-        authStore.login(token, {} as any, false);
-        const user = await getMe();
-        authStore.login(token, user, false);
-      }
-
-      // Load bots
-      try {
-        const bots = await getBots();
-        botStore.setBots(bots);
-        if (bots.length > 0 && !botStore.selectedBotId) {
-          botStore.setSelectedBot(bots[0].id);
-        }
-      } catch {
-        // Bots loading is non-critical
-      }
-    } catch {
-      setStep('credentials');
-      Alert.alert('Error', 'Failed to load user data');
-    }
-  };
-
   if (step === 'loading') {
     return (
       <View style={styles.loadingContainer}>

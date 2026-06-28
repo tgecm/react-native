@@ -77,9 +77,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.teleshopadmin"
+    namespace "ecm.myanmarshop.com"
     defaultConfig {
-        applicationId "com.teleshopadmin"
+        applicationId "ecm.myanmarshop.com"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

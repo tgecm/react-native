@@ -20,7 +20,7 @@ export const getImageUrl = (
       const photo = parsed.find((m: any) => m.type === 'photo') || parsed[0];
       fileId = photo.file_id;
     }
-  } catch (_) {
+  } catch {
     // not JSON, use raw value
   }
 

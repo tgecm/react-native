@@ -72,7 +72,7 @@ export const ListSkeleton: React.FC<{ count?: number }> = ({ count = 5 }) => (
         <LoadingSkeleton width={40} height={40} borderRadiusVal={20} />
         <View style={styles.listText}>
           <LoadingSkeleton width="70%" height={14} />
-          <View style={{ height: 4 }} />
+          <View style={styles.spacer} />
           <LoadingSkeleton width="40%" height={12} />
         </View>
       </View>
@@ -104,5 +104,8 @@ const styles = StyleSheet.create({
   listText: {
     flex: 1,
     marginLeft: spacing.md,
+  },
+  spacer: {
+    height: 4,
   },
 });

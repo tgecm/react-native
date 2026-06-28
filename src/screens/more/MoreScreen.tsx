@@ -73,7 +73,7 @@ export const MoreScreen: React.FC = () => {
             style={styles.menuItem}
             onPress={() => navigation.navigate('Superadmin')}
           >
-            <View style={[styles.menuIcon, { backgroundColor: '#EF444420' }]}>
+            <View style={styles.superadminIcon}>
               <Icon name="shield-account" size={22} color="#EF4444" />
             </View>
             <Text style={styles.menuLabel}>Superadmin</Text>
@@ -149,6 +149,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
+  },
+  superadminIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+    backgroundColor: '#EF444420',
   },
   menuLabel: {
     flex: 1,

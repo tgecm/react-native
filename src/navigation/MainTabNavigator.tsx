@@ -18,6 +18,26 @@ export type MainTabParamList = {
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+const DashboardIcon = ({ color, size }: { color: string; size: number }) => (
+  <Icon name="view-dashboard" color={color} size={size} />
+);
+
+const OrdersIcon = ({ color, size }: { color: string; size: number }) => (
+  <Icon name="package-variant-closed" color={color} size={size} />
+);
+
+const ProductsIcon = ({ color, size }: { color: string; size: number }) => (
+  <Icon name="shopping" color={color} size={size} />
+);
+
+const CustomersIcon = ({ color, size }: { color: string; size: number }) => (
+  <Icon name="account-group" color={color} size={size} />
+);
+
+const MoreIcon = ({ color, size }: { color: string; size: number }) => (
+  <Icon name="dots-horizontal" color={color} size={size} />
+);
+
 export const MainTabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
@@ -49,9 +69,7 @@ export const MainTabNavigator: React.FC = () => {
         component={DashboardScreen}
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="view-dashboard" color={color} size={size} />
-          ),
+          tabBarIcon: DashboardIcon,
         }}
       />
       <Tab.Screen
@@ -59,9 +77,7 @@ export const MainTabNavigator: React.FC = () => {
         component={OrdersScreen}
         options={{
           title: 'Orders',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="package-variant-closed" color={color} size={size} />
-          ),
+          tabBarIcon: OrdersIcon,
         }}
       />
       <Tab.Screen
@@ -69,9 +85,7 @@ export const MainTabNavigator: React.FC = () => {
         component={ProductsScreen}
         options={{
           title: 'Products',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="shopping" color={color} size={size} />
-          ),
+          tabBarIcon: ProductsIcon,
         }}
       />
       <Tab.Screen
@@ -79,9 +93,7 @@ export const MainTabNavigator: React.FC = () => {
         component={CustomersScreen}
         options={{
           title: 'Customers',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="account-group" color={color} size={size} />
-          ),
+          tabBarIcon: CustomersIcon,
         }}
       />
       <Tab.Screen
@@ -90,9 +102,7 @@ export const MainTabNavigator: React.FC = () => {
         options={{
           title: 'More',
           headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="dots-horizontal" color={color} size={size} />
-          ),
+          tabBarIcon: MoreIcon,
         }}
       />
     </Tab.Navigator>
